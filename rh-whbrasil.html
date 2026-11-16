@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Sistema de recadastramento do RH WH Brasil</title>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Sistema de recadastramento do RH WH Brasil">
+  <meta property="og:url" content="https://alfenc.github.io/rh-whbrasil">
+  <meta name="twitter:card" content="summary">
+  <!-- Página gerada pelo ALF.enc. Não edite à mão: ela é regravada a cada alteração do link. -->
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
+           font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #0f172a; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 32px; max-width: 420px; width: 100%;
+            text-align: center; box-shadow: 0 20px 40px rgba(15, 23, 42, .08); }
+    .logo { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            color: #fff; background: linear-gradient(135deg, #4f46e5, #3b82f6); }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    p { margin: 0; color: #64748b; font-size: 14px; line-height: 1.5; }
+    .giro { width: 22px; height: 22px; margin: 20px auto 0; border: 3px solid #c7d2fe; border-top-color: #4f46e5; border-radius: 50%;
+            animation: g .8s linear infinite; }
+    @keyframes g { to { transform: rotate(360deg); } }
+    a.botao { display: inline-block; margin-top: 20px; padding: 12px 20px; border-radius: 12px; background: #4f46e5; color: #fff;
+              text-decoration: none; font-weight: 600; font-size: 14px; }
+    .rodape { margin-top: 24px; font-size: 11px; color: #94a3b8; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #020617; color: #f8fafc; }
+      .card { background: #0f172a; border-color: #1e293b; box-shadow: none; }
+      p { color: #94a3b8; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+    </div>
+    <h1 id="titulo">Abrindo o link...</h1>
+    <p id="texto">Só um instante.</p>
+    <div id="giro" class="giro"></div>
+    <div id="acao"></div>
+    <div class="rodape">ALF.enc — encurtador de links</div>
+  </div>
+  <script>
+    var API = "https://script.google.com/macros/s/AKfycbyT0T3CUAavxnxr8_5fS_sClfhiwg9cNmhFzSNRukIysfKdw1B6bj6FoW2MCttf-m5W/exec";
+    var APELIDO = "rh-whbrasil";
+    // Formatos aceitos: site/apelido   site/?apelido   site/?l=apelido   site/#apelido
+    function apelidoDaUrl() {
+      if (APELIDO) return APELIDO;
+      var q = location.search.replace(/^\?/, "");
+      if (q) {
+        var m = q.match(/(?:^|&)l=([^&]*)/);
+        if (m) return decodeURIComponent(m[1]);
+        if (q.indexOf("=") < 0) return decodeURIComponent(q.split("&")[0]);
+      }
+      if (location.hash.length > 1) return decodeURIComponent(location.hash.slice(1).replace(/^\//, ""));
+      var partes = location.pathname.split("/").filter(Boolean);
+      var ultimo = partes.length ? partes[partes.length - 1] : "";
+      return /\.html?$/i.test(ultimo) ? "" : decodeURIComponent(ultimo);
+    }
+    function mostrar(titulo, texto, botao) {
+      document.getElementById("giro").style.display = "none";
+      document.getElementById("titulo").textContent = titulo;
+      document.getElementById("texto").textContent = texto;
+      var acao = document.getElementById("acao");
+      acao.innerHTML = "";
+      if (botao) {
+        var a = document.createElement("a");
+        a.className = "botao"; a.href = "#"; a.textContent = botao;
+        a.onclick = function (e) { e.preventDefault(); location.reload(); };
+        acao.appendChild(a);
+      }
+    }
+    (function () {
+      var apelido = apelidoDaUrl().trim();
+      if (!apelido) { mostrar("ALF.enc", "Encurtador de links."); return; }
+      fetch(API + "?api=resolver&l=" + encodeURIComponent(apelido))
+        .then(function (r) { return r.json(); })
+        .then(function (r) {
+          if (r.estado === "ok" && /^https?:\/\//i.test(r.destino)) location.replace(r.destino);
+          else if (r.estado === "senha" && r.url) location.replace(r.url);
+          else if (r.estado === "expirado") mostrar("Este link expirou", r.expiraEm ? "A validade terminou em " + r.expiraEm + "." : "A validade deste link terminou.");
+          else if (r.estado === "desativado") mostrar("Link pausado", "Este link está temporariamente desativado.");
+          else mostrar("Link não encontrado", "O apelido \"" + apelido + "\" não existe ou foi removido.");
+        })
+        .catch(function () { mostrar("Não foi possível abrir o link", "Verifique sua conexão com a internet e tente de novo.", "Tentar novamente"); });
+    })();
+  </script>
+</body>
+</html>
