@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>ALF.enc</title>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ALF.enc">
+  <meta property="og:url" content="https://alfenc.github.io/">
+  <meta name="description" content="Encurtador de links">
+  <meta property="og:description" content="Encurtador de links">
+  <meta name="twitter:card" content="summary">
+  <!-- Página gerada pelo ALF.enc. Não edite à mão: ela é regravada a cada alteração do link. -->
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
@@ -39,67 +46,50 @@
     <div id="acao"></div>
     <div class="rodape">ALF.enc — encurtador de links</div>
   </div>
-
   <script>
-    // =======================================================================
-    // CONFIGURAÇÃO: cole aqui a URL do App da Web (a que termina em /exec)
-    // =======================================================================
-    var API = 'https://script.google.com/macros/s/AKfycbyT0T3CUAavxnxr8_5fS_sClfhiwg9cNmhFzSNRukIysfKdw1B6bj6FoW2MCttf-m5W/exec';
-
-    // Aceita os formatos:  site/?apelido   site/?l=apelido   site/#apelido   site/apelido
+    var API = "https://script.google.com/macros/s/AKfycbyT0T3CUAavxnxr8_5fS_sClfhiwg9cNmhFzSNRukIysfKdw1B6bj6FoW2MCttf-m5W/exec";
+    var APELIDO = null;
+    // Formatos aceitos: site/apelido   site/?apelido   site/?l=apelido   site/#apelido
     function apelidoDaUrl() {
-      var q = location.search.replace(/^\?/, '');
+      if (APELIDO) return APELIDO;
+      var q = location.search.replace(/^\?/, "");
       if (q) {
         var m = q.match(/(?:^|&)l=([^&]*)/);
         if (m) return decodeURIComponent(m[1]);
-        if (q.indexOf('=') < 0) return decodeURIComponent(q.split('&')[0]);
+        if (q.indexOf("=") < 0) return decodeURIComponent(q.split("&")[0]);
       }
-      if (location.hash.length > 1) return decodeURIComponent(location.hash.slice(1).replace(/^\//, ''));
-      var partes = location.pathname.split('/').filter(Boolean);
-      var ultimo = partes.length ? partes[partes.length - 1] : '';
-      return /\.html?$/i.test(ultimo) ? '' : decodeURIComponent(ultimo);
+      if (location.hash.length > 1) return decodeURIComponent(location.hash.slice(1).replace(/^\//, ""));
+      var partes = location.pathname.split("/").filter(Boolean);
+      var ultimo = partes.length ? partes[partes.length - 1] : "";
+      return /\.html?$/i.test(ultimo) ? "" : decodeURIComponent(ultimo);
     }
-
     function mostrar(titulo, texto, botao) {
-      document.getElementById('giro').style.display = 'none';
-      document.getElementById('titulo').textContent = titulo;
-      document.getElementById('texto').textContent = texto;
-      var acao = document.getElementById('acao');
-      acao.innerHTML = '';
+      document.getElementById("giro").style.display = "none";
+      document.getElementById("titulo").textContent = titulo;
+      document.getElementById("texto").textContent = texto;
+      var acao = document.getElementById("acao");
+      acao.innerHTML = "";
       if (botao) {
-        var a = document.createElement('a');
-        a.className = 'botao'; a.href = botao.href; a.textContent = botao.texto;
-        if (botao.onclick) a.onclick = botao.onclick;
+        var a = document.createElement("a");
+        a.className = "botao"; a.href = "#"; a.textContent = botao;
+        a.onclick = function (e) { e.preventDefault(); location.reload(); };
         acao.appendChild(a);
       }
     }
-
-    function resolver() {
+    (function () {
       var apelido = apelidoDaUrl().trim();
-      if (!apelido) { mostrar('ALF.enc', 'Encurtador de links. Use um link completo, como este endereço seguido do apelido.'); return; }
-
-      fetch(API + '?api=resolver&l=' + encodeURIComponent(apelido))
+      if (!apelido) { mostrar("ALF.enc", "Encurtador de links."); return; }
+      fetch(API + "?api=resolver&l=" + encodeURIComponent(apelido))
         .then(function (r) { return r.json(); })
         .then(function (r) {
-          if (r.estado === 'ok' && /^https?:\/\//i.test(r.destino)) {
-            location.replace(r.destino);                      // vai direto, sem tela intermediária
-          } else if (r.estado === 'senha' && r.url) {
-            location.replace(r.url);                          // a senha é pedida na página do sistema
-          } else if (r.estado === 'expirado') {
-            mostrar('Este link expirou', r.expiraEm ? 'A validade terminou em ' + r.expiraEm + '.' : 'A validade deste link terminou.');
-          } else if (r.estado === 'desativado') {
-            mostrar('Link pausado', 'Este link está temporariamente desativado.');
-          } else {
-            mostrar('Link não encontrado', 'O apelido "' + apelido + '" não existe ou foi removido.');
-          }
+          if (r.estado === "ok" && /^https?:\/\//i.test(r.destino)) location.replace(r.destino);
+          else if (r.estado === "senha" && r.url) location.replace(r.url);
+          else if (r.estado === "expirado") mostrar("Este link expirou", r.expiraEm ? "A validade terminou em " + r.expiraEm + "." : "A validade deste link terminou.");
+          else if (r.estado === "desativado") mostrar("Link pausado", "Este link está temporariamente desativado.");
+          else mostrar("Link não encontrado", "O apelido \"" + apelido + "\" não existe ou foi removido.");
         })
-        .catch(function () {
-          mostrar('Não foi possível abrir o link', 'Verifique sua conexão com a internet e tente de novo.',
-            { href: '#', texto: 'Tentar novamente', onclick: function (e) { e.preventDefault(); location.reload(); } });
-        });
-    }
-
-    resolver();
+        .catch(function () { mostrar("Não foi possível abrir o link", "Verifique sua conexão com a internet e tente de novo.", "Tentar novamente"); });
+    })();
   </script>
 </body>
 </html>
