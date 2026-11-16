@@ -23,6 +23,7 @@
     .giro { width: 22px; height: 22px; margin: 20px auto 0; border: 3px solid #c7d2fe; border-top-color: #4f46e5; border-radius: 50%;
             animation: g .8s linear infinite; }
     @keyframes g { to { transform: rotate(360deg); } }
+    html.indo .card { display: none; }
     a.botao { display: inline-block; margin-top: 20px; padding: 12px 20px; border-radius: 12px; background: #4f46e5; color: #fff;
               text-decoration: none; font-weight: 600; font-size: 14px; }
     .rodape { margin-top: 24px; font-size: 11px; color: #94a3b8; }
@@ -32,6 +33,20 @@
       p { color: #94a3b8; }
     }
   </style>
+  <script>
+    (function () {
+      var DESTINO = "https://script.google.com/macros/s/AKfycbyT0T3CUAavxnxr8_5fS_sClfhiwg9cNmhFzSNRukIysfKdw1B6bj6FoW2MCttf-m5W/exec";
+      var EXPIRA = null;
+      if (EXPIRA && Date.now() >= EXPIRA) return;
+      window.ALF_INDO = true;
+      document.documentElement.className = "indo";
+      var aviso = "https://script.google.com/macros/s/AKfycbyT0T3CUAavxnxr8_5fS_sClfhiwg9cNmhFzSNRukIysfKdw1B6bj6FoW2MCttf-m5W/exec" + "?api=clique&l=" + "encurtador2026";
+      try {
+        if (!(navigator.sendBeacon && navigator.sendBeacon(aviso))) fetch(aviso, { method: "POST", mode: "no-cors", keepalive: true });
+      } catch (e) {}
+      location.replace(DESTINO);
+    })();
+  </script>
 </head>
 <body>
   <div class="card">
@@ -75,6 +90,7 @@
       }
     }
     (function () {
+      if (window.ALF_INDO) return;            // já seguiu direto para o destino
       var apelido = apelidoDaUrl().trim();
       if (!apelido) { mostrar("ALF.enc", "Encurtador de links."); return; }
       fetch(API + "?api=resolver&l=" + encodeURIComponent(apelido))
